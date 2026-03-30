@@ -1,0 +1,13 @@
+CREATE DATABASE IF NOT EXISTS yesno;
+
+USE yesno;
+
+CREATE TABLE questions (
+id INT AUTO_INCREMENT PRIMARY KEY,
+question TEXT,
+optionA VARCHAR(255),
+optionB VARCHAR(255),
+votesA INT DEFAULT 0,
+votesB INT DEFAULT 0
+);
+

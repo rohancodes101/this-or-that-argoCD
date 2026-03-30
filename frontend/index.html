@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>This or That</title>
+</head>
+<body>
+
+<h2>Create Question</h2>
+
+<input id="question" placeholder="Enter question"><br><br> <input id="optA" placeholder="Option A"><br><br> <input id="optB" placeholder="Option B"><br><br>
+
+<button onclick="createQuestion()">Create</button>
+
+<hr>
+
+<h2>Questions</h2>
+<div id="questions"></div>
+
+<script>
+const API = "http://20.2.136.77:3000";
+
+async function createQuestion() {
+  const question = document.getElementById("question").value;
+  const optionA = document.getElementById("optA").value;
+  const optionB = document.getElementById("optB").value;
+
+  if (!question || !optionA || !optionB) {
+    alert("Fill all fields");
+    return;
+  }
+
+  await fetch(API + "/questions", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ question, optionA, optionB })
+  });
+
+  loadQuestions();
+}
+
+async function vote(id, option) {
+  await fetch(API + "/vote/" + id, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ option })
+  });
+
+  loadQuestions();
+}
+
+async function loadQuestions() {
+  const res = await fetch(API + "/questions");
+  const data = await res.json();
+
+  const div = document.getElementById("questions");
+  div.innerHTML = "";
+
+  data.forEach(q => {
+    div.innerHTML += `
+      <div>
+        <h3>${q.question}</h3>
+        <button onclick="vote(${q.id}, 'A')">${q.optionA} (${q.votesA})</button>
+        <button onclick="vote(${q.id}, 'B')">${q.optionB} (${q.votesB})</button>
+      </div>
+      <hr>
+    `;
+  });
+}
+
+loadQuestions();
+</script>
+
+</body>
+</html>
+
