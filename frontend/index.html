@@ -2,73 +2,131 @@
 
 <html>
 <head>
-  <title>This or That | 1 last time</title>
+  <title>This or That</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    input {
+      margin: 5px;
+      padding: 8px;
+    }
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .question {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Create Question</h2>
+  <h1>This or That</h1>
 
-<input id="question" placeholder="Enter question"><br><br> <input id="optA" placeholder="Option A"><br><br> <input id="optB" placeholder="Option B"><br><br>
+  <h3>Create Question</h3>
+  <input id="q" placeholder="Question"><br>
+  <input id="a" placeholder="Option A">
+  <input id="b" placeholder="Option B"><br>
+  <button onclick="createQuestion()">Create</button>
 
-<button onclick="createQuestion()">Create</button>
-
-<hr>
-
-<h2>Questions</h2>
-<div id="questions"></div>
+  <h3>Questions</h3>
+  <div id="list"></div>
 
 <script>
-const API = "http://20.2.136.77:30008";
+  const API = "http://20.2.136.77:30008"; // 🔥 your backend NodePort
 
-async function createQuestion() {
-  const question = document.getElementById("question").value;
-  const optionA = document.getElementById("optA").value;
-  const optionB = document.getElementById("optB").value;
+  async function loadQuestions() {
+    try {
+      const res = await fetch(API + "/questions");
 
-  if (!question || !optionA || !optionB) {
-    alert("Fill all fields");
-    return;
+      if (!res.ok) {
+        throw new Error("API error");
+      }
+
+      const text = await res.text();
+
+      // 🔥 Prevent crash if empty
+      if (!text) {
+        console.log("Empty response");
+        document.getElementById("list").innerHTML = "<p>No data</p>";
+        return;
+      }
+
+      const data = JSON.parse(text);
+
+      const div = document.getElementById("list");
+      div.innerHTML = "";
+
+      data.forEach(q => {
+        const el = document.createElement("div");
+        el.className = "question";
+        el.innerHTML = `
+          <p><b>${q.question}</b></p>
+          <button onclick="vote(${q.id}, 'A')">${q.optionA} (${q.votesA})</button>
+          <button onclick="vote(${q.id}, 'B')">${q.optionB} (${q.votesB})</button>
+        `;
+        div.appendChild(el);
+      });
+
+    } catch (err) {
+      console.error("Load error:", err);
+    }
   }
 
-  await fetch(API + "/questions", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ question, optionA, optionB })
-  });
+  async function createQuestion() {
+    const question = document.getElementById("q").value;
+    const optionA = document.getElementById("a").value;
+    const optionB = document.getElementById("b").value;
+
+    try {
+      const res = await fetch(API + "/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, optionA, optionB })
+      });
+
+      if (!res.ok) {
+        throw new Error("Create failed");
+      }
+
+      document.getElementById("q").value = "";
+      document.getElementById("a").value = "";
+      document.getElementById("b").value = "";
+
+      loadQuestions();
+
+    } catch (err) {
+      console.error("Create error:", err);
+    }
+  }
+
+  async function vote(id, option) {
+    try {
+      const res = await fetch(API + "/vote/" + id, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ option })
+      });
+
+      if (!res.ok) {
+        throw new Error("Vote failed");
+      }
+
+      loadQuestions();
+
+    } catch (err) {
+      console.error("Vote error:", err);
+    }
+  }
 
   loadQuestions();
-}
-
-async function vote(id, option) {
-  await fetch(API + "/vote/" + id, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ option })
-  });
-
-  loadQuestions();
-}
-
-async function loadQuestions() {
-  const res = await fetch(API + "/questions");
-  const data = await res.json();
-
-  const div = document.getElementById("questions");
-  div.innerHTML = "";
-
-  data.forEach(q => {
-    div.innerHTML += `
-      <div>
-        <h3>${q.question}</h3>
-        <button onclick="vote(${q.id}, 'A')">${q.optionA} (${q.votesA})</button>
-        <button onclick="vote(${q.id}, 'B')">${q.optionB} (${q.votesB})</button>
-      </div>
-      <hr>
-    `;
-  });
-}
-
-loadQuestions();
 </script>
 
 </body>
