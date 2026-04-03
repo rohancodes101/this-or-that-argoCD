@@ -1,0 +1,63 @@
+name: Build, Push, and Update K8s YAML
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Set image tag (commit SHA)
+        id: vars
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      # ---------- BACKEND ----------
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-backend:${{ env.TAG }}
+
+      # ---------- FRONTEND ----------
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-frontend:${{ env.TAG }}
+
+      # ---------- UPDATE K8S YAML ----------
+      - name: Update backend image in YAML
+        run: |
+          sed -i "s|image: .*/yesno-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-backend:${TAG}|g" k3s/backend/deployment.yaml
+
+      - name: Update frontend image in YAML
+        run: |
+          sed -i "s|image: .*/yesno-frontend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-frontend:${TAG}|g" k3s/frontend/deployment.yaml
+
+      # ---------- COMMIT BACK ----------
+      - name: Commit and push changes
+        run: |
+          git config user.name "${{ secrets.GIT_NAME }}"
+          git config user.email "${{ secrets.GIT_EMAIL }}"
+          git add k3s/backend/deployment.yaml k3s/frontend/deployment.yaml
+          git commit -m "Update image tags to $TAG" || echo "No changes to commit"
+          git push
