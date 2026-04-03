@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: rohanworld101/yesno-frontend:7759e5a
+          image: rohanworld101/yesno-frontend:db3fb8b
           imagePullPolicy: Always
           ports:
             - containerPort: 80
