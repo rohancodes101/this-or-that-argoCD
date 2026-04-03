@@ -58,6 +58,6 @@ jobs:
         run: |
           git config user.name "${{ secrets.GIT_NAME }}"
           git config user.email "${{ secrets.GIT_EMAIL }}"
-          git add k3s/backend/deployment.yaml k3s/frontend/deployment.yaml
+          git add k3s/backend/deployment.yml k3s/frontend/deployment.yml
           git commit -m "Update image tags to $TAG" || echo "No changes to commit"
           git push
