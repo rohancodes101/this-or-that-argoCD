@@ -1,4 +1,4 @@
-#we need seperate PVC.yml if we are doing deployments, but if we use statefulset we can also use volumeClaimTemplates inside this yaml, instead of new yaml 
+#we need seperate PVC.yml if we are doing deployments, but if we use statefulset we can also use volumeClaimTemplates inside this yaml, instead of new yaml
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
@@ -26,6 +26,18 @@ spec:
               secretKeyRef:
                 name: mysql-secret
                 key: MYSQL_PASSWORD
+          - name: MYSQL_DATABASE
+            value: yesno
+
+          - name: MYSQL_USER
+            value: appuser
+
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_PASSWORD
+          
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
@@ -40,3 +52,4 @@ spec:
             storage: 1Gi
 
 #StatefulSets use volumeClaimTemplates to automatically create a dedicated PVC per Pod, ensuring persistent and unique storage, unlike Deployments which require manual PVC creation.
+
