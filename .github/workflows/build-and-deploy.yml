@@ -47,11 +47,11 @@ jobs:
       # ---------- UPDATE K8S YAML ----------
       - name: Update backend image in YAML
         run: |
-          sed -i "s|image: .*/yesno-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-backend:${TAG}|g" k3s/backend/deployment.yaml
+          sed -i "s|image: .*/yesno-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-backend:${TAG}|g" k3s/backend/deployment.yml
 
       - name: Update frontend image in YAML
         run: |
-          sed -i "s|image: .*/yesno-frontend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-frontend:${TAG}|g" k3s/frontend/deployment.yaml
+          sed -i "s|image: .*/yesno-frontend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/yesno-frontend:${TAG}|g" k3s/frontend/deployment.yml
 
       # ---------- COMMIT BACK ----------
       - name: Commit and push changes
