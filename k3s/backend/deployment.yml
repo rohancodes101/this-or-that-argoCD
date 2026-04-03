@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: rohanworld101/yesno-backend:531a4c4
+          image: rohanworld101/yesno-backend:967ebac
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
